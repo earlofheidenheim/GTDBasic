@@ -4,20 +4,23 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.beispiel.gtdbasic.model.Project
 
 class ProjectAdapter(
-    private val projects: MutableList<Project>,
-    private val onProjectClicked: (Project) -> Unit
-) : RecyclerView.Adapter<ProjectAdapter.ProjectViewHolder>() {
+    private val onProjectClicked: (project: Project, isReselection: Boolean) -> Unit
+) : ListAdapter<Project, ProjectAdapter.ProjectViewHolder>(ProjectDiffCallback()) {
 
     private var selectedProjectId: Long? = null
 
-    // ViewHolder (≈ eine Zeile im Endlosformular)
     class ProjectViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tvSortOrder: TextView = itemView.findViewById(R.id.tvSortOrder)
         val tvProjectName: TextView = itemView.findViewById(R.id.tvProjectName)
+        val tvProjectNotesPreview: TextView = itemView.findViewById(R.id.tvProjectNotesPreview)
+        val tvProjectDauer: TextView = itemView.findViewById(R.id.tvProjectDauer)
+        val tvProjectKategorie: TextView = itemView.findViewById(R.id.tvProjectKategorie)
+        val tvProjectStatus: TextView = itemView.findViewById(R.id.tvProjectStatus)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProjectViewHolder {
@@ -27,40 +30,57 @@ class ProjectAdapter(
     }
 
     override fun onBindViewHolder(holder: ProjectViewHolder, position: Int) {
-        val project = projects[position]
-        holder.tvSortOrder.text = project.sortOrder.toString()
+        val project = getItem(position)
         holder.tvProjectName.text = project.name
 
-        // Auswahl-Markierung (≈ aktueller Datensatz)
+        // Notiz-Vorschau
+        if (project.notes.isNotBlank()) {
+            holder.tvProjectNotesPreview.text = project.notes.substringBefore("\n")
+            holder.tvProjectNotesPreview.visibility = View.VISIBLE
+        } else {
+            holder.tvProjectNotesPreview.visibility = View.GONE
+        }
+
+        // Dauer im HH:mm Format anzeigen
+        holder.tvProjectDauer.text = "Dauer: ${formatDuration(project.dauer)}"
+        holder.tvProjectKategorie.text = if (project.kategorie.isNotBlank()) "Kategorie: ${project.kategorie}" else "Kategorie: -"
+        holder.tvProjectStatus.text = if (project.status.isNotBlank()) "Status: ${project.status}" else "Status: -"
+
         holder.itemView.isSelected = (project.id == selectedProjectId)
 
         holder.itemView.setOnClickListener {
+            val isReselection = (project.id == selectedProjectId)
             selectedProjectId = project.id
-            notifyDataSetChanged()
-            onProjectClicked(project)
+            notifyDataSetChanged() // Aktualisiert die Markierung
+            onProjectClicked(project, isReselection)
         }
     }
 
-    override fun getItemCount(): Int = projects.size
+    /**
+     * Formatiert die Dauer von Gesamtminuten in einen "Stunden:Minuten"-String.
+     */
+    private fun formatDuration(totalMinutes: Int): String {
+        val hours = totalMinutes / 60
+        val minutes = totalMinutes % 60
+        return String.format("%d:%02d", hours, minutes)
+    }
 
-    fun getSelectedProject(): Project? =
-        selectedProjectId?.let { id -> projects.firstOrNull { it.id == id } }
+    fun getSelectedProject(): Project? {
+        return selectedProjectId?.let { id -> currentList.firstOrNull { it.id == id } }
+    }
+
     fun clearSelection() {
         selectedProjectId = null
         notifyDataSetChanged()
     }
+}
 
-    fun moveItem(fromPosition: Int, toPosition: Int) {
-        val item = projects.removeAt(fromPosition)
-        projects.add(toPosition, item)
+class ProjectDiffCallback : DiffUtil.ItemCallback<Project>() {
+    override fun areItemsTheSame(oldItem: Project, newItem: Project): Boolean {
+        return oldItem.id == newItem.id
+    }
 
-        projects.forEachIndexed { index, p ->
-            p.sortOrder = index + 1
-        }
-
-        notifyItemMoved(fromPosition, toPosition)
-        val start = minOf(fromPosition, toPosition)
-        val end = maxOf(fromPosition, toPosition)
-        notifyItemRangeChanged(start, end - start + 1)
+    override fun areContentsTheSame(oldItem: Project, newItem: Project): Boolean {
+        return oldItem == newItem
     }
 }

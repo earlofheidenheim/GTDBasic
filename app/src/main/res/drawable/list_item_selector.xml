@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Farbe, wenn das Item ausgewählt ist -->
+    <item android:state_selected="true"
+          android:drawable="@color/selected_item_background" />
+
+    <!-- Standard-Farbe (transparent) -->
+    <item android:drawable="@android:color/transparent" />
+</selector>

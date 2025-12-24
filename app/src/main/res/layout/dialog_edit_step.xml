@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp">
+
+    <EditText
+        android:id="@+id/etStepName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Step-Name"
+        android:inputType="textCapSentences"/>
+
+    <EditText
+        android:id="@+id/etStepZielZeit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Ziel (in Minuten)"
+        android:inputType="number"/>
+
+    <EditText
+        android:id="@+id/etStepNotes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Notizen"
+        android:inputType="textMultiLine|textCapSentences"
+        android:minLines="3"
+        android:gravity="top"/>
+
+</LinearLayout>

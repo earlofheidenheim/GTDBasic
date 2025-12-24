@@ -3,20 +3,78 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:background="@drawable/step_item_background"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="8dp">
 
-    <TextView
-        android:id="@+id/tvStepSortOrder"
-        android:layout_width="40dp"
-        android:layout_height="wrap_content"
-        android:text="1"
-        android:textStyle="bold" />
-
-    <TextView
-        android:id="@+id/tvStepName"
+    <!-- Vertikales Layout für Step-Name und Details -->
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Step name" />
+        android:orientation="vertical">
+
+        <!-- Step-Name -->
+        <TextView
+            android:id="@+id/tvStepName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Step name"
+            android:textSize="18sp"
+            android:singleLine="true"
+            android:ellipsize="none" />
+
+        <!-- Notiz-Vorschau -->
+        <TextView
+            android:id="@+id/tvStepNotesPreview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Keine Notizen vorhanden."
+            android:textSize="12sp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"/>
+
+        <!-- Horizontale Zeile für die Details -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Details: Ziel -->
+            <TextView
+                android:id="@+id/tvStepZiel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ziel: 0:00"
+                android:textSize="12sp"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Details: Dauer -->
+            <TextView
+                android:id="@+id/tvStepDauer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dauer: 0:00"
+                android:textSize="12sp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Play/Pause Button -->
+    <ImageButton
+        android:id="@+id/btnPlayPause"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_play_arrow"
+        android:background="@drawable/play_pause_button_background"
+        android:padding="8dp"
+        android:layout_marginStart="16dp"
+        android:contentDescription="Play oder Pause" />
 
 </LinearLayout>

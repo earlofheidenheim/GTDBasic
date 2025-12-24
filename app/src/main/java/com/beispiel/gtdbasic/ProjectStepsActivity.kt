@@ -1,9 +1,14 @@
 package com.beispiel.gtdbasic
 
+import android.content.Context
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.WindowManager
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
-import android.widget.TextView
+import android.widget.EditText
+import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -13,219 +18,208 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.beispiel.gtdbasic.model.Step
+import com.beispiel.gtdbasic.ui.GtdViewModel
+import java.util.Collections
 
 class ProjectStepsActivity : AppCompatActivity() {
+
+    private val gtdViewModel: GtdViewModel by viewModels()
+    private lateinit var adapter: StepAdapter
+    private var projectId: Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_project_steps)
 
-        // --- Insets (Status-/Navigation-Bar-Abstand) ---
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.stepsRoot)) { v, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            insets
-        }
+        projectId = intent.getLongExtra("projectId", -1L)
+        val projectName = intent.getStringExtra("projectName") ?: "Steps"
 
-        // --- Übergabeparameter (≈ OpenArgs) ---
-        val projectId = intent.getLongExtra("projectId", -1L)
-        val projectName = intent.getStringExtra("projectName") ?: "Unbekannt"
+        setupToolbar(projectName)
+        setupRecyclerView()
+        observeViewModel()
+        setupButtons()
+        handleWindowInsets()
+    }
 
-        // --- Toolbar ---
+    private fun setupToolbar(projectName: String) {
         val toolbar = findViewById<Toolbar>(R.id.toolbarSteps)
         setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Steps – $projectName"
+        supportActionBar?.title = "Steps of $projectName"
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        toolbar.setOnClickListener {
+            onSupportNavigateUp()
+        }
+    }
 
-        // --- Header ---
-        val tvHeader = findViewById<TextView>(R.id.tvStepsHeader)
-        tvHeader.text = "Steps: $projectName (ID: $projectId)"
-
-        // --- RecyclerView ---
+    private fun setupRecyclerView() {
         val rvSteps = findViewById<RecyclerView>(R.id.rvSteps)
+
+        adapter = StepAdapter(
+            onStepClicked = { step, isReselection ->
+                if (isReselection) {
+                    Toast.makeText(this, "Springe zur Detailseite von ${step.name}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            onPlayPauseClicked = { step ->
+                gtdViewModel.togglePlayPause(step)
+            }
+        )
+
+        rvSteps.adapter = adapter
         rvSteps.layoutManager = LinearLayoutManager(this)
 
-        // --- Datenquelle ---
-        val steps = StepStore.getSteps(projectId)
+        val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+                val fromPosition = viewHolder.absoluteAdapterPosition
+                val toPosition = target.absoluteAdapterPosition
 
-        // --- Adapter + Auswahl ---
-        val stepAdapter = StepAdapter(steps) { step ->
-            android.widget.Toast.makeText(this, "Ausgewählt: ${step.name}", android.widget.Toast.LENGTH_SHORT).show()
-        }
-        rvSteps.adapter = stepAdapter
+                if (fromPosition == RecyclerView.NO_POSITION || toPosition == RecyclerView.NO_POSITION) {
+                    return false
+                }
 
-        // --- Drag & Drop (≈ Zeilen verschieben) ---
-        val touchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            0
-        ) {
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                val fromPos = viewHolder.bindingAdapterPosition
-                val toPos = target.bindingAdapterPosition
-                stepAdapter.moveItem(fromPos, toPos)
+                val currentList = adapter.currentList.toMutableList()
+                Collections.swap(currentList, fromPosition, toPosition)
+                adapter.submitList(currentList)
                 return true
             }
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                // Swipe deaktiviert (0), daher leer
+                if (direction == ItemTouchHelper.LEFT) {
+                    val position = viewHolder.absoluteAdapterPosition
+                    if (position != RecyclerView.NO_POSITION) {
+                        val step = adapter.currentList[position]
+                        showResetDurationDialog(step)
+                    }
+                }
+                // Wichtig: Die Zeile wird durch die neue Liste vom ViewModel automatisch zurückgesetzt
+                adapter.notifyItemChanged(viewHolder.absoluteAdapterPosition)
+            }
+
+            override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
+                super.clearView(recyclerView, viewHolder)
+                gtdViewModel.updateStepSortOrder(adapter.currentList)
             }
         })
-        touchHelper.attachToRecyclerView(rvSteps)
+        itemTouchHelper.attachToRecyclerView(rvSteps)
+    }
 
-        // --- Buttons ---
-        val btnNewStep = findViewById<Button>(R.id.btnNewStep)
-        val btnEditStep = findViewById<Button>(R.id.btnEditStep)
-        val btnDeleteStep = findViewById<Button>(R.id.btnDeleteStep)
+    private fun observeViewModel() {
+        gtdViewModel.getStepsForProject(projectId).observe(this) { steps ->
+            adapter.submitList(steps)
+        }
+    }
 
-        // Helper: Tastatur stabil öffnen (kein toggle!)
-        fun showKeyboardStable(input: android.widget.EditText, dialog: AlertDialog) {
-            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+    private fun setupButtons() {
+        findViewById<Button>(R.id.btnNewStep).setOnClickListener { showNewStepDialog() }
+        findViewById<Button>(R.id.btnEditStep).setOnClickListener { showEditStepDialog() }
+        findViewById<Button>(R.id.btnDeleteStep).setOnClickListener { showDeleteStepDialog() }
+    }
 
-            input.isFocusableInTouchMode = true
-            input.requestFocus()
-
-            input.post {
-                val imm = getSystemService(INPUT_METHOD_SERVICE)
-                        as android.view.inputmethod.InputMethodManager
-                imm.showSoftInput(input, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+    private fun showNewStepDialog() {
+        val input = EditText(this).apply { hint = "Step-Name" }
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Neuer Step")
+            .setView(input)
+            .setPositiveButton("Speichern") { _, _ ->
+                val name = input.text.toString().trim()
+                if (name.isNotBlank()) {
+                    val newStep = Step(projectId = projectId, name = name, sortOrder = adapter.itemCount + 1)
+                    gtdViewModel.insertStep(newStep)
+                } else {
+                    Toast.makeText(this, "Name darf nicht leer sein.", Toast.LENGTH_SHORT).show()
+                }
             }
+            .setNegativeButton("Abbrechen", null)
+            .create()
+        showKeyboardInDialog(dialog, input)
+        dialog.show()
+    }
 
-            input.postDelayed({
-                val imm = getSystemService(INPUT_METHOD_SERVICE)
-                        as android.view.inputmethod.InputMethodManager
-                imm.showSoftInput(input, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
-            }, 250)
+    private fun showEditStepDialog() {
+        val selectedStep = adapter.getSelectedStep() ?: run {
+            Toast.makeText(this, "Bitte zuerst einen Step auswählen.", Toast.LENGTH_SHORT).show()
+            return
         }
 
-        // =========================
-        // NEU
-        // =========================
-        btnNewStep.setOnClickListener {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_step, null)
+        val etName = dialogView.findViewById<EditText>(R.id.etStepName)
+        val etZielZeit = dialogView.findViewById<EditText>(R.id.etStepZielZeit)
+        val etNotes = dialogView.findViewById<EditText>(R.id.etStepNotes)
 
-            val input = android.widget.EditText(this)
-            input.hint = "Step-Name"
+        etName.setText(selectedStep.name)
+        val zielZeitInMinutes = selectedStep.zielZeitInSeconds / 60
+        etZielZeit.setText(if (zielZeitInMinutes > 0) zielZeitInMinutes.toString() else "")
+        etNotes.setText(selectedStep.notes)
+        etName.setSelection(etName.text.length)
 
-            val dialog = AlertDialog.Builder(this)
-                .setTitle("Neuer Step")
-                .setView(input)
-                .setPositiveButton("Speichern", null)
-                .setNegativeButton("Abbrechen", null)
-                .create()
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Step bearbeiten")
+            .setView(dialogView)
+            .setPositiveButton("Speichern") { _, _ ->
+                val newName = etName.text.toString().trim()
+                if (newName.isBlank()) {
+                    Toast.makeText(this, "Name darf nicht leer sein.", Toast.LENGTH_SHORT).show()
+                } else {
+                    val newZielZeitInMinutes = etZielZeit.text.toString().toLongOrNull() ?: 0
+                    val newNotes = etNotes.text.toString().trim()
 
-            dialog.setOnShowListener {
-                showKeyboardStable(input, dialog)
-
-                val btnSave = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                btnSave.setOnClickListener {
-                    val name = input.text.toString().trim()
-                    if (name.isBlank()) {
-                        android.widget.Toast.makeText(this, "Name darf nicht leer sein.", android.widget.Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-
-                    val newId = (steps.maxOfOrNull { it.id } ?: 0L) + 1L
-                    val newSortOrder = steps.size + 1
-
-                    steps.add(
-                        Step(
-                            id = newId,
-                            projectId = projectId,
-                            name = name,
-                            sortOrder = newSortOrder
-                        )
+                    val updatedStep = selectedStep.copy(
+                        name = newName,
+                        zielZeitInSeconds = newZielZeitInMinutes * 60,
+                        notes = newNotes
                     )
-
-                    stepAdapter.clearSelection()
-                    stepAdapter.notifyItemInserted(steps.size - 1)
-                    rvSteps.scrollToPosition(steps.size - 1)
-
-                    dialog.dismiss()
+                    gtdViewModel.updateStep(updatedStep)
                 }
             }
+            .setNegativeButton("Abbrechen", null)
+            .create()
 
-            dialog.show()
+        showKeyboardInDialog(dialog, etName)
+        dialog.show()
+    }
+
+    private fun showDeleteStepDialog() {
+        val selectedStep = adapter.getSelectedStep() ?: run {
+            Toast.makeText(this, "Bitte zuerst einen Step auswählen.", Toast.LENGTH_SHORT).show()
+            return
         }
-
-        // =========================
-        // BEARBEITEN (robust + stabile Tastatur)
-        // =========================
-        btnEditStep.setOnClickListener {
-
-            val selected = stepAdapter.getSelectedStep()
-            if (selected == null) {
-                android.widget.Toast.makeText(this, "Bitte zuerst einen Step auswählen.", android.widget.Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+        AlertDialog.Builder(this)
+            .setTitle("Step löschen")
+            .setMessage("Soll \"${selectedStep.name}\" wirklich gelöscht werden?")
+            .setPositiveButton("Löschen") { _, _ ->
+                gtdViewModel.deleteStep(selectedStep)
+                adapter.clearSelection()
             }
+            .setNegativeButton("Abbrechen", null)
+            .show()
+    }
 
-            val input = android.widget.EditText(this)
-            input.setText(selected.name)
-            input.setSelection(input.text.length)
-
-            val dialog = AlertDialog.Builder(this)
-                .setTitle("Step bearbeiten")
-                .setView(input)
-                .setPositiveButton("Speichern", null)
-                .setNegativeButton("Abbrechen", null)
-                .create()
-
-            dialog.setOnShowListener {
-                showKeyboardStable(input, dialog)
-
-                val btnSave = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-                btnSave.setOnClickListener {
-                    val newName = input.text.toString().trim()
-                    if (newName.isBlank()) {
-                        android.widget.Toast.makeText(this, "Name darf nicht leer sein.", android.widget.Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-
-                    val index = steps.indexOfFirst { it.id == selected.id }
-                    if (index == -1) {
-                        android.widget.Toast.makeText(this, "Auswahl nicht gefunden.", android.widget.Toast.LENGTH_SHORT).show()
-                        return@setOnClickListener
-                    }
-
-                    steps[index].name = newName
-                    stepAdapter.notifyItemChanged(index)
-
-                    dialog.dismiss()
-                }
+    private fun showResetDurationDialog(step: Step) {
+        AlertDialog.Builder(this)
+            .setTitle("Dauer zurücksetzen")
+            .setMessage("Soll die Dauer für \"${step.name}\" wirklich auf 0:00:00 gesetzt werden?")
+            .setPositiveButton("Zurücksetzen") { _, _ ->
+                gtdViewModel.resetStepDuration(step)
             }
+            .setNegativeButton("Abbrechen", null)
+            .show()
+    }
 
-            dialog.show()
+    private fun handleWindowInsets() {
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.stepsRoot)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
+            val toolbar = findViewById<Toolbar>(R.id.toolbarSteps)
+            toolbar.setPadding(0, systemBars.top, 0, 0)
+            insets
         }
+    }
 
-        // =========================
-        // LÖSCHEN
-        // =========================
-        btnDeleteStep.setOnClickListener {
-
-            val selected = stepAdapter.getSelectedStep()
-            if (selected == null) {
-                android.widget.Toast.makeText(this, "Bitte zuerst einen Step auswählen.", android.widget.Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-
-            AlertDialog.Builder(this)
-                .setTitle("Step löschen")
-                .setMessage("Möchten Sie den Step \"${selected.name}\" wirklich löschen?")
-                .setPositiveButton("Löschen") { _, _ ->
-                    val index = steps.indexOfFirst { it.id == selected.id }
-                    if (index >= 0) {
-                        steps.removeAt(index)
-                        stepAdapter.clearSelection()
-                        stepAdapter.notifyItemRemoved(index)
-
-                        steps.forEachIndexed { i, step -> step.sortOrder = i + 1 }
-                        stepAdapter.notifyItemRangeChanged(index, steps.size - index)
-                    }
-                }
-                .setNegativeButton("Abbrechen", null)
-                .show()
+    private fun showKeyboardInDialog(dialog: AlertDialog, input: EditText) {
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        dialog.setOnShowListener {
+            input.requestFocus()
+            (getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
         }
     }
 

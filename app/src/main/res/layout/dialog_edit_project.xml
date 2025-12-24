@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp">
+
+    <EditText
+        android:id="@+id/etProjectName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Projekt-Name"
+        android:inputType="textCapSentences"/>
+
+    <AutoCompleteTextView
+        android:id="@+id/actvProjectKategorie"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Kategorie"
+        android:inputType="textCapWords"/>
+
+    <EditText
+        android:id="@+id/etProjectStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Status"
+        android:inputType="textCapWords"/>
+
+    <EditText
+        android:id="@+id/etProjectNotes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="Notizen"
+        android:inputType="textMultiLine|textCapSentences"
+        android:minLines="3"
+        android:gravity="top"/>
+
+</LinearLayout>

@@ -1,29 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="13dp">
+    android:orientation="vertical">
 
-
-
-    <!-- Überschrift -->
-    <TextView
-        android:id="@+id/tvTitle"
+    <!-- Toolbar am oberen Rand -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarMain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Projects"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:paddingBottom="12dp" />
+        android:minHeight="?attr/actionBarSize"
+        app:title="GTDBasic" />
 
-    <!-- Button-Leiste -->
+    <!-- Projektliste (füllt den Raum in der Mitte) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvProjects"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingStart="13dp"
+        android:paddingEnd="13dp" />
+
+    <!-- Button-Leiste (am unteren Rand) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingBottom="13dp">
+        android:padding="13dp">
 
         <Button
             android:id="@+id/btnNewProject"
@@ -46,7 +51,6 @@
             android:singleLine="true"
             android:ellipsize="end" />
 
-
         <Button
             android:id="@+id/btnDeleteProject"
             android:layout_width="0dp"
@@ -60,12 +64,4 @@
 
     </LinearLayout>
 
-    <!-- Projektliste -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvProjects"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
-
 </LinearLayout>
-

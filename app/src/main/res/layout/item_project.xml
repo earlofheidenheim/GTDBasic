@@ -3,24 +3,81 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp">
+    android:padding="12dp"
+    android:background="@drawable/project_item_background"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:layout_marginBottom="8dp">
 
-    <!-- sortOrder (≈ Sortierfeld) -->
-    <TextView
-        android:id="@+id/tvSortOrder"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="1"
-        android:textSize="18sp"
-        android:paddingEnd="12dp" />
-
-    <!-- Project-Name -->
-    <TextView
-        android:id="@+id/tvProjectName"
+    <!-- Vertikales Layout für Projektname und die Detail-Zeile -->
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Project name"
-        android:textSize="18sp" />
-</LinearLayout>
+        android:orientation="vertical">
 
+        <!-- Projekt-Name -->
+        <TextView
+            android:id="@+id/tvProjectName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Project name"
+            android:textSize="18sp"
+            android:singleLine="true"
+            android:ellipsize="none" />
+
+        <!-- Notiz-Vorschau -->
+        <TextView
+            android:id="@+id/tvProjectNotesPreview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Keine Notizen vorhanden."
+            android:textSize="12sp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="4dp"/>
+
+        <!-- Horizontale, gewichtete Zeile für die Details -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Details: Dauer (feste Breite) -->
+            <TextView
+                android:id="@+id/tvProjectDauer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Dauer: 0:00"
+                android:textSize="12sp"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Details: Kategorie (flexible Breite mit Kürzung) -->
+            <TextView
+                android:id="@+id/tvProjectKategorie"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Kategorie: -"
+                android:textSize="12sp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:layout_marginEnd="16dp"/>
+
+            <!-- Details: Status (flexible Breite mit Kürzung) -->
+            <TextView
+                android:id="@+id/tvProjectStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Status: -"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

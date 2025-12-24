@@ -6,33 +6,31 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <!-- Toolbar -->
+    <!-- Toolbar am oberen Rand -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbarSteps"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"
         app:title="Steps" />
 
-    <!-- Überschrift -->
-    <TextView
-        android:id="@+id/tvStepsHeader"
+    <!-- Die Liste füllt den Raum in der Mitte -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSteps"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:text="Steps"
-        android:textSize="18sp"
-        android:textStyle="bold" />
+        android:layout_height="0dp"
+        android:layout_weight="1" />
 
-    <!-- Button-Leiste -->
+    <!-- Button-Leiste am unteren Rand -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:paddingStart="12dp"
         android:paddingEnd="12dp"
+        android:paddingTop="10dp"
         android:paddingBottom="10dp">
 
-        <!-- Neu -->
         <Button
             android:id="@+id/btnNewStep"
             android:layout_width="0dp"
@@ -40,51 +38,30 @@
             android:layout_weight="1"
             android:text="Neu"
             android:textSize="13sp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
             android:singleLine="true"
             android:ellipsize="end" />
 
-        <!-- Bearbeiten (minimal kleinere Schrift) -->
         <Button
             android:id="@+id/btnEditStep"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="12dp"
             android:text="Bearbeiten"
             android:textSize="12sp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
             android:singleLine="true"
             android:ellipsize="end" />
 
-        <!-- Löschen -->
         <Button
             android:id="@+id/btnDeleteStep"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="12dp"
             android:text="Löschen"
             android:textSize="13sp"
-            android:paddingTop="6dp"
-            android:paddingBottom="6dp"
-            android:paddingStart="8dp"
-            android:paddingEnd="8dp"
             android:singleLine="true"
             android:ellipsize="end" />
     </LinearLayout>
-
-    <!-- Steps-Liste -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvSteps"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
 
 </LinearLayout>
