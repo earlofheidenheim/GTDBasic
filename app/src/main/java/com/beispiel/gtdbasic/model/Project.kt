@@ -29,5 +29,8 @@ data class Project(
     var status: String = "",
 
     @ColumnInfo(name = "notes", defaultValue = "")
-    var notes: String = ""
+    var notes: String = "",
+
+    @ColumnInfo(name = "is_demo", defaultValue = "0")
+    var isDemo: Boolean = false
 )

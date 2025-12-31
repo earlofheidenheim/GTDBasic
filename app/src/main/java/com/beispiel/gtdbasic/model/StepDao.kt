@@ -43,4 +43,11 @@ interface StepDao {
      */
     @Query("SELECT * FROM steps WHERE project_id = :projectId ORDER BY sort_order ASC")
     fun getStepsForProject(projectId: Long): Flow<List<Step>>
+
+    /**
+     * Liest einen einzelnen Step anhand seiner ID.
+     * Gibt einen Flow zurück, um die UI automatisch bei Änderungen zu aktualisieren.
+     */
+    @Query("SELECT * FROM steps WHERE id = :id")
+    fun getStepById(id: Long): Flow<Step>
 }

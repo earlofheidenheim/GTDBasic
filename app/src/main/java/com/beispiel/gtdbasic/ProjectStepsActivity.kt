@@ -1,8 +1,10 @@
 package com.beispiel.gtdbasic
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
@@ -45,8 +47,8 @@ class ProjectStepsActivity : AppCompatActivity() {
         val toolbar = findViewById<Toolbar>(R.id.toolbarSteps)
         setSupportActionBar(toolbar)
         supportActionBar?.title = "Steps of $projectName"
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
-        toolbar.setOnClickListener {
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.setNavigationOnClickListener {
             onSupportNavigateUp()
         }
     }
@@ -54,16 +56,11 @@ class ProjectStepsActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         val rvSteps = findViewById<RecyclerView>(R.id.rvSteps)
 
-        adapter = StepAdapter(
-            onStepClicked = { step, isReselection ->
-                if (isReselection) {
-                    Toast.makeText(this, "Springe zur Detailseite von ${step.name}", Toast.LENGTH_SHORT).show()
-                }
-            },
-            onPlayPauseClicked = { step ->
-                gtdViewModel.togglePlayPause(step)
-            }
-        )
+        adapter = StepAdapter { step ->
+            val intent = Intent(this, StepDetailActivity::class.java)
+            intent.putExtra("stepId", step.id)
+            startActivity(intent)
+        }
 
         rvSteps.adapter = adapter
         rvSteps.layoutManager = LinearLayoutManager(this)
@@ -111,8 +108,6 @@ class ProjectStepsActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         findViewById<Button>(R.id.btnNewStep).setOnClickListener { showNewStepDialog() }
-        findViewById<Button>(R.id.btnEditStep).setOnClickListener { showEditStepDialog() }
-        findViewById<Button>(R.id.btnDeleteStep).setOnClickListener { showDeleteStepDialog() }
     }
 
     private fun showNewStepDialog() {
@@ -135,69 +130,10 @@ class ProjectStepsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showEditStepDialog() {
-        val selectedStep = adapter.getSelectedStep() ?: run {
-            Toast.makeText(this, "Bitte zuerst einen Step auswählen.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_step, null)
-        val etName = dialogView.findViewById<EditText>(R.id.etStepName)
-        val etZielZeit = dialogView.findViewById<EditText>(R.id.etStepZielZeit)
-        val etNotes = dialogView.findViewById<EditText>(R.id.etStepNotes)
-
-        etName.setText(selectedStep.name)
-        val zielZeitInMinutes = selectedStep.zielZeitInSeconds / 60
-        etZielZeit.setText(if (zielZeitInMinutes > 0) zielZeitInMinutes.toString() else "")
-        etNotes.setText(selectedStep.notes)
-        etName.setSelection(etName.text.length)
-
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Step bearbeiten")
-            .setView(dialogView)
-            .setPositiveButton("Speichern") { _, _ ->
-                val newName = etName.text.toString().trim()
-                if (newName.isBlank()) {
-                    Toast.makeText(this, "Name darf nicht leer sein.", Toast.LENGTH_SHORT).show()
-                } else {
-                    val newZielZeitInMinutes = etZielZeit.text.toString().toLongOrNull() ?: 0
-                    val newNotes = etNotes.text.toString().trim()
-
-                    val updatedStep = selectedStep.copy(
-                        name = newName,
-                        zielZeitInSeconds = newZielZeitInMinutes * 60,
-                        notes = newNotes
-                    )
-                    gtdViewModel.updateStep(updatedStep)
-                }
-            }
-            .setNegativeButton("Abbrechen", null)
-            .create()
-
-        showKeyboardInDialog(dialog, etName)
-        dialog.show()
-    }
-
-    private fun showDeleteStepDialog() {
-        val selectedStep = adapter.getSelectedStep() ?: run {
-            Toast.makeText(this, "Bitte zuerst einen Step auswählen.", Toast.LENGTH_SHORT).show()
-            return
-        }
-        AlertDialog.Builder(this)
-            .setTitle("Step löschen")
-            .setMessage("Soll \"${selectedStep.name}\" wirklich gelöscht werden?")
-            .setPositiveButton("Löschen") { _, _ ->
-                gtdViewModel.deleteStep(selectedStep)
-                adapter.clearSelection()
-            }
-            .setNegativeButton("Abbrechen", null)
-            .show()
-    }
-
     private fun showResetDurationDialog(step: Step) {
         AlertDialog.Builder(this)
             .setTitle("Dauer zurücksetzen")
-            .setMessage("Soll die Dauer für \"${step.name}\" wirklich auf 0:00:00 gesetzt werden?")
+            .setMessage("Soll die Dauer für ${step.name} wirklich auf 0:00:00 gesetzt werden?")
             .setPositiveButton("Zurücksetzen") { _, _ ->
                 gtdViewModel.resetStepDuration(step)
             }

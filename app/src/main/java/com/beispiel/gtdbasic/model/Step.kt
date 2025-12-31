@@ -41,5 +41,31 @@ data class Step(
 
     // Zeitstempel, wann der Timer gestartet wurde
     @ColumnInfo(name = "start_time_millis", defaultValue = "0")
-    var startTimeMillis: Long = 0
+    var startTimeMillis: Long = 0,
+
+    // Erste Zeile Sport-Felder
+    @ColumnInfo(name = "exercise_duration_minutes", defaultValue = "0")
+    var exerciseDurationMinutes: Int = 0,
+
+    @ColumnInfo(name = "average_pulse", defaultValue = "0")
+    var averagePulse: Int = 0,
+
+    @ColumnInfo(name = "peak_pulse", defaultValue = "0")
+    var peakPulse: Int = 0,
+
+    @ColumnInfo(name = "average_load", defaultValue = "")
+    var averageLoad: String = "",
+
+    // Zweite Zeile Sport-Felder
+    @ColumnInfo(name = "fitness_level", defaultValue = "0")
+    var fitnessLevel: Int = 0,
+
+    @ColumnInfo(name = "repetitions", defaultValue = "0")
+    var repetitions: Int = 0,
+
+    @ColumnInfo(name = "calories", defaultValue = "0")
+    var calories: Int = 0,
+
+    @ColumnInfo(name = "distance_meters", defaultValue = "0")
+    var distanceMeters: Int = 0
 )

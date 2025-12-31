@@ -7,42 +7,42 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Data Access Object (DAO) für die "projects"-Tabelle.
- * Definiert die Methoden für den Datenbankzugriff.
- */
 @Dao
 interface ProjectDao {
 
-    /**
-     * Fügt ein oder mehrere Projekte in die Datenbank ein.
-     */
     @Insert
     suspend fun insert(vararg projects: Project)
 
-    /**
-     * Aktualisiert ein bestehendes Projekt in der Datenbank.
-     */
     @Update
     suspend fun update(project: Project)
 
-    /**
-     * Aktualisiert eine Liste von Projekten in der Datenbank.
-     */
     @Update
     suspend fun update(projects: List<Project>)
 
-    /**
-     * Löscht ein Projekt aus der Datenbank.
-     */
     @Delete
     suspend fun delete(project: Project)
 
-    /**
-     * Liest alle Projekte aus der Datenbank, sortiert nach der "sort_order".
-     * Gibt einen Flow zurück, sodass die UI automatisch aktualisiert wird,
-     * wenn sich die Daten ändern.
-     */
-    @Query("SELECT * FROM projects ORDER BY sort_order ASC")
-    fun getAllProjects(): Flow<List<Project>>
+    @Query("SELECT * FROM projects WHERE is_demo = :isDemo ORDER BY sort_order ASC")
+    fun getAllProjects(isDemo: Boolean): Flow<List<Project>>
+
+    @Query("SELECT * FROM projects WHERE is_demo = :isDemo AND kategorie = :category ORDER BY sort_order ASC")
+    fun getProjectsByCategory(isDemo: Boolean, category: String): Flow<List<Project>>
+
+    @Query("SELECT * FROM projects WHERE is_demo = :isDemo AND status = :status ORDER BY sort_order ASC")
+    fun getProjectsByStatus(isDemo: Boolean, status: String): Flow<List<Project>>
+
+    @Query("SELECT * FROM projects WHERE is_demo = :isDemo AND kategorie = :category AND status = :status ORDER BY sort_order ASC")
+    fun getProjectsByCategoryAndStatus(isDemo: Boolean, category: String, status: String): Flow<List<Project>>
+
+    @Query("SELECT DISTINCT kategorie FROM projects WHERE is_demo = :isDemo AND kategorie != '' ORDER BY kategorie ASC")
+    fun getAllCategories(isDemo: Boolean): Flow<List<String>>
+
+    @Query("SELECT DISTINCT status FROM projects WHERE is_demo = :isDemo AND status != '' ORDER BY status ASC")
+    fun getAllStatuses(isDemo: Boolean): Flow<List<String>>
+
+    @Query("UPDATE projects SET kategorie = :newCategoryName WHERE kategorie = :oldCategoryName AND is_demo = :isDemo")
+    suspend fun renameCategory(oldCategoryName: String, newCategoryName: String, isDemo: Boolean)
+
+    @Query("UPDATE projects SET status = :newStatusName WHERE status = :oldStatusName AND is_demo = :isDemo")
+    suspend fun renameStatus(oldStatusName: String, newStatusName: String, isDemo: Boolean)
 }

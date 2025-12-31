@@ -66,15 +66,4 @@
 
     </LinearLayout>
 
-    <!-- Play/Pause Button -->
-    <ImageButton
-        android:id="@+id/btnPlayPause"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_play_arrow"
-        android:background="@drawable/play_pause_button_background"
-        android:padding="8dp"
-        android:layout_marginStart="16dp"
-        android:contentDescription="Play oder Pause" />
-
 </LinearLayout>

@@ -14,6 +14,44 @@
         android:minHeight="?attr/actionBarSize"
         app:title="GTDBasic" />
 
+    <!-- Filter Chips Category -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:singleSelection="true">
+
+            <!-- Category Chips werden dynamisch hier hinzugefügt -->
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
+    <!-- Filter Chips Status -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            app:singleSelection="true">
+
+            <!-- Status Chips werden dynamisch hier hinzugefügt -->
+
+        </com.google.android.material.chip.ChipGroup>
+    </HorizontalScrollView>
+
     <!-- Projektliste (füllt den Raum in der Mitte) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvProjects"
